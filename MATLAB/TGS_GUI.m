@@ -5,6 +5,7 @@ classdef TGS_GUI < handle
         StartPointEdit
         TwoSAWCheckBox
         BaselineCheckBox
+        ClosePlotsCheckBox  % New property
         GratingEdit
         LogFileEdit
         
@@ -30,12 +31,12 @@ classdef TGS_GUI < handle
         
         function createGUI(obj)
             % Figure size slightly wider to accommodate long paths
-            obj.UIFigure = uifigure('Name', 'TGS Analysis Tool', 'Position', [100 100 1000 550]);
+            obj.UIFigure = uifigure('Name', 'TGS Analysis Tool', 'Position', [100 100 1050 550]);
             
             % --- 1. Calibration ---
             uilabel(obj.UIFigure, 'Text', '1. Calibration (grating spacing)', 'Position', [20 510 300 22], 'FontWeight', 'bold');
             uibutton(obj.UIFigure, 'Text', 'Select calibration files', 'Position', [20 485 150 22], 'ButtonPushedFcn', @(btn, event) obj.selectCalibFiles());
-            obj.CalibFileLabel = uilabel(obj.UIFigure, 'Text', 'No files selected', 'Position', [180 485 800 22], 'FontColor', [0.5 0.5 0.5]);
+            obj.CalibFileLabel = uilabel(obj.UIFigure, 'Text', 'No files selected', 'Position', [180 485 850 22], 'FontColor', [0.5 0.5 0.5]);
             uilabel(obj.UIFigure, 'Text', 'Resulting grating (um):', 'Position', [20 455 130 22]);
             obj.GratingEdit = uieditfield(obj.UIFigure, 'numeric', 'Position', [150 455 100 22], 'Value', 0);
             uibutton(obj.UIFigure, 'Text', 'Run calibration', 'Position', [260 455 110 22], 'ButtonPushedFcn', @(btn, event) obj.runCalibration());
@@ -43,32 +44,39 @@ classdef TGS_GUI < handle
             % --- 2. Parameters ---
             uilabel(obj.UIFigure, 'Text', '2. Global parameters', 'Position', [20 420 200 22], 'FontWeight', 'bold');
             uilabel(obj.UIFigure, 'Text', 'Start point (1-4):', 'Position', [20 395 100 22]);
-            obj.StartPointEdit = uieditfield(obj.UIFigure, 'numeric', 'Position', [120 395 50 22], 'Value', 2);
-            obj.TwoSAWCheckBox = uicheckbox(obj.UIFigure, 'Text', 'Two SAW', 'Position', [190 395 100 22]);
-            obj.BaselineCheckBox = uicheckbox(obj.UIFigure, 'Text', 'Use baseline', 'Position', [290 395 100 22], 'ValueChangedFcn', @(cb, event) obj.toggleBaselineUI());
-            obj.BaselineButton = uibutton(obj.UIFigure, 'Text', 'Select baseline', 'Position', [400 395 110 22], 'Visible', 'off', 'ButtonPushedFcn', @(btn, event) obj.selectBaselineFiles());
-            obj.BaselineFileLabel = uilabel(obj.UIFigure, 'Text', 'No baseline selected', 'Position', [520 395 460 22], 'Visible', 'off', 'FontColor', [0.5 0.5 0.5]);
+            obj.StartPointEdit = uieditfield(obj.UIFigure, 'numeric', 'Position', [120 395 40 22], 'Value', 2);
+            
+            obj.TwoSAWCheckBox = uicheckbox(obj.UIFigure, 'Text', 'Two SAW', 'Position', [180 395 80 22]);
+            
+            obj.ClosePlotsCheckBox = uicheckbox(obj.UIFigure, 'Text', 'Close plot windows', 'Position', [270 395 140 22], 'Value', 1);
+            
+            obj.BaselineCheckBox = uicheckbox(obj.UIFigure, 'Text', 'Use baseline', 'Position', [420 395 100 22], 'ValueChangedFcn', @(cb, event) obj.toggleBaselineUI());
+            
+            obj.BaselineButton = uibutton(obj.UIFigure, 'Text', 'Select baseline', 'Position', [530 395 110 22], 'Visible', 'off', 'ButtonPushedFcn', @(btn, event) obj.selectBaselineFiles());
+            obj.BaselineFileLabel = uilabel(obj.UIFigure, 'Text', 'No baseline selected', 'Position', [650 395 380 22], 'Visible', 'off', 'FontColor', [0.5 0.5 0.5]);
             
             % --- 3. Export Settings ---
             uilabel(obj.UIFigure, 'Text', '3. Export Settings', 'Position', [20 360 200 22], 'FontWeight', 'bold');
             uilabel(obj.UIFigure, 'Text', 'Results Log:', 'Position', [20 335 80 22]);
-            obj.LogFileEdit = uieditfield(obj.UIFigure, 'text', 'Position', [100 335 800 22], 'Placeholder', 'Defaults to input folder');
-            uibutton(obj.UIFigure, 'Text', 'Browse...', 'Position', [910 335 70 22], 'ButtonPushedFcn', @(btn, event) obj.browseLogFile());
+            obj.LogFileEdit = uieditfield(obj.UIFigure, 'text', 'Position', [100 335 850 22], 'Placeholder', 'Defaults to input folder');
+            uibutton(obj.UIFigure, 'Text', 'Browse...', 'Position', [960 335 70 22], 'ButtonPushedFcn', @(btn, event) obj.browseLogFile());
             
             % --- 4. Queue ---
             uilabel(obj.UIFigure, 'Text', '4. Batch processing queue', 'Position', [20 300 200 22], 'FontWeight', 'bold');
             uibutton(obj.UIFigure, 'Text', 'Add files', 'Position', [20 275 100 22], 'ButtonPushedFcn', @(btn, event) obj.addBatchFiles());
             uibutton(obj.UIFigure, 'Text', 'Clear queue', 'Position', [130 275 100 22], 'ButtonPushedFcn', @(btn, event) obj.clearQueue());
-            obj.BatchListbox = uilistbox(obj.UIFigure, 'Position', [20 100 960 165], 'Items', {});
+            obj.BatchListbox = uilistbox(obj.UIFigure, 'Position', [20 100 1010 165], 'Items', {});
             
             % --- 5. Run ---
-            uibutton(obj.UIFigure, 'Text', 'Run batch process', 'Position', [400 25 200 50], 'FontWeight', 'bold', 'ButtonPushedFcn', @(btn, event) obj.runBatch());
+            uibutton(obj.UIFigure, 'Text', 'Run batch process', 'Position', [425 25 200 50], 'FontWeight', 'bold', 'ButtonPushedFcn', @(btn, event) obj.runBatch());
         end
         
         %% --- Internal Analysis Methods ---
         function runCalibration(obj)
             if isempty(obj.CalibPosFile), errordlg('Select calibration files.'); return; end
-            obj.cleanupEnvironment();
+            % Always clear environment before a new run for memory safety
+            obj.cleanupEnvironment(true); 
+            
             [bBool, bPos, bNeg] = obj.getBaselineParams();
             
             % Initial guess of 10um for calibration
@@ -78,7 +86,11 @@ classdef TGS_GUI < handle
             obj.GratingEdit.Value = 10^6 * 2665.9 / freq(1);
             drawnow;
             fprintf('Calibration complete. Frequency: %.4e Hz | Grating: %.4f um\n', freq(1), obj.GratingEdit.Value);
-            close all
+            
+            % FIXED: Explicitly check to close the calibration plots immediately
+            if obj.ClosePlotsCheckBox.Value
+                close all;
+            end
         end
         
         function runBatch(obj)
@@ -103,7 +115,6 @@ classdef TGS_GUI < handle
             
             [blbool, baselinePOS, baselineNEG] = obj.getBaselineParams();
             
-            % Explicit types for TGSPhaseAnalysis
             clean_grat = double(obj.GratingEdit.Value);
             localStart = double(obj.StartPointEdit.Value);
             localTwoSAW = double(obj.TwoSAWCheckBox.Value);
@@ -112,7 +123,9 @@ classdef TGS_GUI < handle
             fprintf('\n--- Starting Batch Process ---\n');
             for i = 1:length(obj.PosFiles)
                 [~, runName] = fileparts(obj.PosFiles{i});
-                obj.cleanupEnvironment();
+                
+                % Clean up previous windows before starting next fit
+                obj.cleanupEnvironment(obj.ClosePlotsCheckBox.Value);
                 
                 try
                     [freq, freq_err, speed, diff, diff_err, damping_vec, tauErr, A, A_err, beta, betaErr, B, BErr, theta, thetaErr, C, CErr, file_date_time] = ...
@@ -132,6 +145,12 @@ classdef TGS_GUI < handle
                     fprintf('[%d/%d] FAILED: %s (%s)\n', i, length(obj.PosFiles), runName, ME.message);
                 end
             end
+            
+            % FIXED: Close the very last set of plots after the loop finishes
+            if obj.ClosePlotsCheckBox.Value
+                close all;
+            end
+            
             fprintf('--- Batch Process Finished ---\n');
         end
         
@@ -145,8 +164,10 @@ classdef TGS_GUI < handle
             end
         end
         
-        function cleanupEnvironment(obj)
-            close all;
+        function cleanupEnvironment(obj, shouldClose)
+            if shouldClose
+                close all;
+            end
             lastwarn('');
             drawnow; 
         end

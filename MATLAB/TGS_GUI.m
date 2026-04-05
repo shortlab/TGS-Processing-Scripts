@@ -1,3 +1,4 @@
+% Script to create window-based interface for TGSPhaseAnalysis. Once this script is opened in MATLAB, click run to start the window.
 classdef TGS_GUI < handle
     properties
         UIFigure
@@ -87,7 +88,7 @@ classdef TGS_GUI < handle
             drawnow;
             fprintf('Calibration complete. Frequency: %.4e Hz | Grating: %.4f um\n', freq(1), obj.GratingEdit.Value);
             
-            % FIXED: Explicitly check to close the calibration plots immediately
+            % Explicitly check to close the calibration plots immediately
             if obj.ClosePlotsCheckBox.Value
                 close all;
             end
@@ -146,7 +147,6 @@ classdef TGS_GUI < handle
                 end
             end
             
-            % FIXED: Close the very last set of plots after the loop finishes
             if obj.ClosePlotsCheckBox.Value
                 close all;
             end
